@@ -1,0 +1,22 @@
+﻿# .NET
+bin/
+obj/
+*.user
+*.suo
+wwwroot/
+
+
+# Node.js
+node_modules/
+.next/
+
+# VS Code / JetBrains
+.vscode/
+.idea/
+
+# Базы данных и секреты
+*.db
+*.sqlite
+.env
+
+.vs/

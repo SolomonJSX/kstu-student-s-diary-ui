@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "KSTU Student's Diary",
+    "slug": "kstu-students-diary-ui",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/main_icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/main_icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/main_icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.janserik.kstustudentsdiaryui",
+      "usesCleartextTraffic": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "3933b218-073e-4ab8-b9f4-79f67dc9113d"
+      }
+    }
+  }
+}
