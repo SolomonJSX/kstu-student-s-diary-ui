@@ -62,7 +62,7 @@ const DayScheduleComponent = ({ lesson }: {  lesson: ScheduleEntryType }) => {
             fontSize: 13,
           }}
         >
-          {lesson.auditorium}, {lesson.corpus}
+          {lesson.auditorium}
         </Text>
       </View>
     </View>

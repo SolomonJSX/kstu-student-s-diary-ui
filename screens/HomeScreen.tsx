@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Card, Divider, ActivityIndicator, useTheme } from 'react-native-paper';
 import { useProfile } from '../hooks/useProfile';
@@ -7,6 +7,7 @@ import { useTodayAndTomorrowTasks } from '../hooks/useTodayAndTomorrowTasks';
 import { getData, STUDENT_ID_STORAGE_KEY } from '../utils/storage';
 import dayjs from 'dayjs';
 import ScheduleCard from '../components/ScheduleCard';
+import { useFocusEffect } from '@react-navigation/native';
 
 const fullDayNames: Record<string, string> = {
   ПН: "Понедельник",
@@ -33,7 +34,7 @@ const HomeScreen = () => {
     }
     loadData();
   }, []);
-
+  
   const isLoading = profileLoading || scheduleLoading || tasksLoading;
 
   if (isLoading) {
