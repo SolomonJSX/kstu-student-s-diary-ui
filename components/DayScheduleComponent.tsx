@@ -1,73 +1,75 @@
-import React from 'react'
+import React from 'react';
 import { View } from 'react-native';
-import { Text, useTheme } from "react-native-paper"
+import { Text, useTheme, Divider } from "react-native-paper";
 import { ScheduleEntryType } from '../types/scheduleTypes';
 
-const DayScheduleComponent = ({ lesson }: {  lesson: ScheduleEntryType }) => {
+const DayScheduleComponent = ({ lesson, isLast }: { lesson: ScheduleEntryType, isLast?: boolean }) => {
   const theme = useTheme();
 
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        marginBottom: 14,
-      }}
-    >
-      {/* Время */}
+    <>
       <View
         style={{
-          minWidth: 75,
-          backgroundColor: theme.colors.primaryContainer,
-          borderRadius: 8,
-          paddingVertical: 6,
-          justifyContent: "center",
-          alignItems: "center",
-          marginRight: 12,
+          flexDirection: "row",
+          marginBottom: 14,
         }}
       >
-        <Text
+        {/* Время */}
+        <View
           style={{
-            fontWeight: "bold",
-            color: theme.colors.onPrimaryContainer,
-            fontSize: 14,
+            minWidth: 75,
+            backgroundColor: theme.colors.primaryContainer,
+            borderRadius: 8,
+            paddingVertical: 6,
+            justifyContent: "center",
+            alignItems: "center",
+            marginRight: 12,
           }}
         >
-          {lesson.time}
-        </Text>
-      </View>
+          <Text
+            style={{
+              fontWeight: "bold",
+              color: theme.colors.onPrimaryContainer,
+              fontSize: 14,
+            }}
+          >
+            {lesson.time}
+          </Text>
+        </View>
 
-      {/* Информация о паре */}
-      <View style={{ flex: 1 }}>
-        <Text
-          style={{
-            fontSize: 16,
-            fontWeight: "600",
-            marginBottom: 2,
-            color: theme.colors.onSurface,
-          }}
-        >
-          {lesson.subject}
-        </Text>
-        <Text
-          style={{
-            color: theme.colors.onSurfaceVariant,
-            marginBottom: 2,
-          }}
-        >
-          {lesson.teacher}
-        </Text>
-        <Text
-          style={{
-            color: theme.colors.onSurfaceVariant,
-            fontSize: 13,
-          }}
-        >
-          {lesson.auditorium}
-        </Text>
+        {/* Информация о паре */}
+        <View style={{ flex: 1 }}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: "600",
+              marginBottom: 2,
+              color: theme.colors.onSurface,
+            }}
+          >
+            {lesson.subject}
+          </Text>
+          <Text
+            style={{
+              color: theme.colors.onSurfaceVariant,
+              marginBottom: 2,
+            }}
+          >
+            {lesson.teacher}
+          </Text>
+          <Text
+            style={{
+              color: theme.colors.onSurfaceVariant,
+              fontSize: 13,
+            }}
+          >
+            {lesson.auditorium}
+          </Text>
+        </View>
       </View>
-    </View>
-  )
-}
+      {!isLast && <Divider style={{ marginVertical: 8 }} />}
+    </>
+  );
+};
 
 export default DayScheduleComponent;
-

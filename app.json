@@ -4,11 +4,11 @@
     "slug": "kstu-students-diary-ui",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/main_icon.png",
+    "icon": "./assets/splash.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/main_icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/main_icon.png",
+        "foregroundImage": "./assets/adaptive.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,

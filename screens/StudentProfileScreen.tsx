@@ -49,7 +49,6 @@ const StudentProfileScreen = () => {
 
                 <Card.Content>
                     <InfoRow label="Специальность" value={profile.specialty} />
-                    <InfoRow label="Группа" value={profile.group} />
                     <InfoRow label="Курс" value={profile.course} />
                     <InfoRow label="Форма обучения" value={profile.form} />
                     <InfoRow label="Дата рождения" value={profile.birthDate} />

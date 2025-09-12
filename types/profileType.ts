@@ -7,4 +7,5 @@
     form?: string;
     birthDate?: string;
     profileId?: string;
+    studentId?: string;
 }
