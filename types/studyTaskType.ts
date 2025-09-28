@@ -32,3 +32,33 @@ export type StudyTask = {
     isCompleted: boolean;
     createdAt: string;
 }
+
+export interface TaskAttachment {
+    id: number;
+    studyTaskId: number;
+    fileName: string;
+    contentType: string;
+    fileSize: number;
+    uploadedAt: string;
+    uploadedBy?: string;
+}
+
+export interface PagedResult<T> {
+    page: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
+    data: T[];
+}
+
+export interface UploadAttachmentResponse {
+    message: string;
+}
+
+export interface UploadMultipleAttachmentsResponse {
+    results: Array<{
+        fileName: string;
+        status: 'success' | 'error';
+        error?: string;
+    }>;
+}

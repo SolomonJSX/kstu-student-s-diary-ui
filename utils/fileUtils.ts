@@ -31,110 +31,111 @@ export const saveToFiles = async (
   fileName: string,
   studentId: string,
   subjectId: string,
-  fileId: number
+  fileId: number,
+  onProgress?: (progress: number) => void
 ): Promise<string | null> => {
   try {
+    const folderUri = await getOrRequestFolderUri();
+    if (!folderUri) return null;
+
     const url = `${BASE_URL}/umkd/download-file?studentId=${studentId}&subjectId=${subjectId}&fileId=${fileId}`;
     console.log("Downloading from:", url);
 
+    // ⬇️ сначала качаем во временный файл
     const tempPath = FileSystem.cacheDirectory + fileName;
-    const downloadResult = await FileSystem.downloadAsync(url, tempPath);
+    const downloadResumable = FileSystem.createDownloadResumable(
+      url,
+      tempPath,
+      {},
+      (downloadProgress) => {
+        const progress =
+          downloadProgress.totalBytesWritten /
+          downloadProgress.totalBytesExpectedToWrite;
 
-    if (downloadResult.status !== 200) {
-      throw new Error(`HTTP error: ${downloadResult.status}`);
-    }
-    console.log("File downloaded to:", downloadResult.uri);
-
-    if (Platform.OS === "android") {
-      const folderUri = await getOrRequestFolderUri();
-      if (!folderUri) return null;
-
-      try {
-        // 🔹 Проверяем файлы в папке
-        const files = await FileSystem.StorageAccessFramework.readDirectoryAsync(folderUri);
-
-        // 🔹 Ищем файл с таким же именем
-        const existingFile = files.find(f => decodeURIComponent(f).endsWith(fileName));
-        if (existingFile) {
-          console.log("Deleting existing file:", existingFile);
-          await FileSystem.StorageAccessFramework.deleteAsync(existingFile);
+        if (onProgress) {
+          onProgress(Math.max(0, Math.round(progress * 100)));
         }
-
-        // 🔹 Создаём файл заново
-        const destUri = await FileSystem.StorageAccessFramework.createFileAsync(
-          folderUri,
-          fileName,
-          "application/octet-stream"
-        );
-
-        // 🔹 Читаем скачанный файл и пишем
-        const fileContent = await FileSystem.readAsStringAsync(downloadResult.uri, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-
-        await FileSystem.writeAsStringAsync(destUri, fileContent, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-
-        console.log("File saved to:", destUri);
-        return destUri;
-
-      } catch (safError) {
-        console.error("SAF error:", safError);
-        return downloadResult.uri; // fallback: вернём временный файл
       }
-    } else {
-      // iOS → documentDirectory
-      const destUri = FileSystem.documentDirectory + fileName;
+    );
 
-      // Если файл уже есть → удаляем
-      const fileInfo = await FileSystem.getInfoAsync(destUri);
-      if (fileInfo.exists) {
-        console.log("Deleting existing iOS file:", destUri);
-        await FileSystem.deleteAsync(destUri, { idempotent: true });
-      }
-
-      await FileSystem.moveAsync({
-        from: downloadResult.uri,
-        to: destUri,
-      });
-
-      console.log("File moved to:", destUri);
-      return destUri;
+    const res = await downloadResumable.downloadAsync();
+    if (!res || res.status !== 200) {
+      throw new Error("Ошибка скачивания");
     }
+
+    // ⬆️ читаем временный файл в base64
+    const base64Content = await FileSystem.readAsStringAsync(res.uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    // 📂 создаём файл в выбранной папке SAF
+    const destUri = await FileSystem.StorageAccessFramework.createFileAsync(
+      folderUri,
+      fileName,
+      "application/octet-stream"
+    );
+
+    // ✍ пишем в content:// файл
+    await FileSystem.writeAsStringAsync(destUri, base64Content, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    console.log("✅ File saved to:", destUri);
+    return destUri; // теперь у нас content://
   } catch (error: any) {
-    console.error("Ошибка сохранения файла:", error);
-    Alert.alert("Ошибка", "Не удалось сохранить файл: " + error.message);
+    console.error("❌ Ошибка скачивания:", error);
+    Alert.alert("Ошибка", error.message || "Не удалось скачать файл");
     return null;
   }
 };
 
-const ensureFileUri = async (uri: string): Promise<string> => {
-  if (uri.startsWith("file://")) return uri;
 
+
+const ensureFileUri = async (uri: string): Promise<string> => {
   if (uri.startsWith("content://")) {
-    const fileName = uri.split("/").pop() || "file";
-    const localUri = FileSystem.cacheDirectory + fileName;
-    await FileSystem.copyAsync({ from: uri, to: localUri });
-    return localUri;
+    return uri; // всё ок
+  }
+
+  if (uri.startsWith("file://")) {
+    // 📂 сохраняем во временный SAF файл, чтобы получить content://
+    const folderUri = await getOrRequestFolderUri();
+    if (!folderUri) throw new Error("Нет доступа к папке для сохранения файлов");
+
+    const fileName = uri.split("/").pop() || "file.pdf";
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    const destUri = await FileSystem.StorageAccessFramework.createFileAsync(
+      folderUri,
+      fileName,
+      "application/pdf"
+    );
+
+    await FileSystem.writeAsStringAsync(destUri, base64, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    return destUri; // теперь content://
   }
 
   throw new Error(`Неизвестный формат URI: ${uri}`);
 };
 
+
 // 👉 «Открыть файл» — системное меню, где юзер выберет Word / PDF viewer / и т.д.
 export const openFile = async (uri: string) => {
   try {
+    const safeUri = await ensureFileUri(uri); // теперь всегда content://
+
     if (Platform.OS === "android") {
-      // SAF URI или file:// → оба подхватываются
       await IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
-        data: uri,
+        data: safeUri,
         flags: 1,
       });
     } else {
-      // на iOS проще использовать sharing, он откроет встроенные вьюверы
       if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri);
+        await Sharing.shareAsync(safeUri);
       } else {
         Alert.alert("iOS", "Открытие файла недоступно");
       }
@@ -145,10 +146,22 @@ export const openFile = async (uri: string) => {
   }
 };
 
+
+
 // 👉 «Поделиться файлом» — системное меню для отправки в Telegram, WhatsApp и т.д.
 export const shareFile = async (uri: string) => {
   try {
-    const fileUri = await ensureFileUri(uri);
+    let fileUri = uri;
+
+    // Expo Sharing принимает только file://
+    if (uri.startsWith("content://")) {
+      const fileName = uri.split("/").pop() || "file";
+      const tempPath = FileSystem.cacheDirectory + fileName;
+
+      // копируем из SAF → cache
+      await FileSystem.copyAsync({ from: uri, to: tempPath });
+      fileUri = tempPath;
+    }
 
     if (await Sharing.isAvailableAsync()) {
       await Sharing.shareAsync(fileUri, { dialogTitle: "Поделиться файлом" });

@@ -5,8 +5,7 @@ import HomeScreen from '../screens/HomeScreen';
 import CustomDrawerContent from './CustomDrawerContent';
 import WeeklyScheduleTab from '../screens/WeeklySchedule/WeeklyScheduleTab';
 import StudentProfileScreen from "../screens/StudentProfileScreen";
-import StudyTasksScreen from '../screens/StudyTaskScreen';
-import GradesScreen from '../screens/GradesScreen';
+import StudyTasksScreen from '../screens/StudyTaskScreenAddons/StudyTaskScreen';
 import { useRefreshSemesterSchedule } from '../hooks/useRefreshSemesterSchedule';
 import { getData, STUDENT_ID_STORAGE_KEY } from '../utils/storage';
 import { Alert } from 'react-native';
@@ -15,13 +14,17 @@ import UmkdSubjectLists from '../screens/UMKD/UmkdSubjectLists';
 import UmkdScreen from '../screens/UMKD/UmkdScreen';
 import ToolsScreen from '../screens/ToolsScreen';
 import StudentsGithubListScreen from '../screens/Students/StudentsGithubListScreen';
-import GitHubInstructionModal from './GitHubInstructionModal';
 import { useModalStore } from '../hooks/useModalStore';
+import { GradesScreen } from '../screens/Grades/Screens/GradesScreen';
+import GradesTab from '../screens/Grades/GradesTab';
+import { useRefreshGrades } from '../hooks/useGradesRefresh';
+import TasksTab from '../screens/StudyTaskScreenAddons/TasksTab';
 
 const Drawer = createDrawerNavigator();
 
 const DrawerNavigator = () => {
   const { mutate: refreshSchedule, isPending } = useRefreshSemesterSchedule();
+  const { mutate: refreshGrades, isPending: isGradesRefreshing } = useRefreshGrades();
   const { openModal } = useModalStore();
 
   const handleRefresh = async () => {
@@ -42,6 +45,21 @@ const DrawerNavigator = () => {
       });
     } catch (error) {
       Alert.alert('Ошибка', 'Произошла непредвиденная ошибка');
+    }
+  };
+
+  const handleRefreshGrades = async () => {
+    try {
+      refreshGrades(undefined, {
+        onSuccess: () => {
+          Alert.alert("Успех", "Оценки обновлены");
+        },
+        onError: () => {
+          Alert.alert("Ошибка", "Не удалось обновить оценки");
+        },
+      });
+    } catch (error) {
+      Alert.alert("Ошибка", "Произошла непредвиденная ошибка");
     }
   };
 
@@ -86,7 +104,7 @@ const DrawerNavigator = () => {
       />
       <Drawer.Screen
         name="Задачи"
-        component={StudyTasksScreen}
+        component={TasksTab}
         options={{
           drawerIcon: ({ color, size }) => (
             <Text style={{ color, fontSize: size }}>✅</Text>
@@ -104,11 +122,19 @@ const DrawerNavigator = () => {
       />
       <Drawer.Screen
         name="Оценки"
-        component={GradesScreen}
+        component={GradesTab}
         options={{
           drawerIcon: ({ color, size }) => (
             <Text style={{ color, fontSize: size }}>📊</Text>
-          )
+          ),
+          headerRight: () => (
+            <IconButton
+              icon="refresh"
+              size={24}
+              onPress={handleRefreshGrades}
+              disabled={isGradesRefreshing}
+            />
+          ),
         }}
       />
       <Drawer.Screen
